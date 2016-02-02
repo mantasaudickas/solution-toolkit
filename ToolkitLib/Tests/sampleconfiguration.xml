@@ -1,0 +1,52 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configuration>
+	<sources>
+		<folder>BSS.Shared.v6\Source</folder>
+		<folder>Source</folder>
+	</sources>
+	<thirdparty>
+		<folder>Binaries</folder>
+	</thirdparty>
+	<groups>
+		<group name="Services">
+			<projects>
+				<project>Source\Application\ActivityService\BSS.ERP.Application.ActivityService.csproj</project>
+				<project>Source\Application\ProcessingService\BSS.ERP.Application.ProcessingService-trade.csproj</project>
+				<project>Source\Application\DataReplicationService\BSS.ERP.Application.DataReplicationService.csproj</project>
+				<project>Source\Application\ExchangeService\BSS.ERP.Application.ExchangeService.csproj</project>
+				<project>Source\Application\MassEmailSenderService\BSS.ERP.Application.MassEmailSenderService.csproj</project>
+				<project>Source\Application\ResourceService\BSS.ERP.Application.ResourceService.csproj</project>
+				<project>Source\Application\SchedulerService\BSS.ERP.Application.SchedulerService.csproj</project>
+				<project>Source\Application\WorkflowProcessorService\BSS.ERP.Application.WorkflowProcessorService.csproj</project>
+			</projects>
+		</group>
+		<group name="GUI">
+			<projects>
+				<project>Source\GUI\Windows\TradeLauncher\BSS.ERP.GUI.Windows.Launcher-trade.csproj</project>
+			</projects>
+		</group>
+		<group name="Complete" containsGroupNames="true">
+			<projects>
+				<project>Services</project>
+				<project>GUI</project>
+			</projects>
+		</group>
+
+		<group name="Addin.Licensing">
+			<projects>
+				<project>Source\GUI\Windows\Licensing\BSS.ERP.GUI.Windows.Licensing.csproj</project>
+				<project>Source\Component\Licensing\Business\BSS.ERP.Component.Licensing.Business.csproj</project>
+			</projects>
+		</group>
+		<group name="Addins" containsGroupNames="true">
+			<projects>
+				<project>Addin.Licensing</project>
+			</projects>
+		</group>
+		<group name="All" containsGroupNames="true">
+			<projects>
+				<project>Addins</project>
+			</projects>
+		</group>
+	</groups>
+</configuration>

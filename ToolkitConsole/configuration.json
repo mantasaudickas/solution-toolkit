@@ -1,0 +1,29 @@
+﻿{
+	"RootPath": "..\\",
+	"ThirdPartiesRootPath": "..\\packages",
+	"BinariesOutputPath": "Binaries",
+	"TargetFrameworkVersion": "4.6.1",
+	"Projects": [{
+		"Name": "Visma.School.Admin",
+        "Assemblies": [
+            "Visma.School.UI.Web",
+            "Visma.School.Services.Scheduler",
+            "Visma.School.UI.Web.Tests",
+            "Visma.School.Business.Services.IntegrationTests",
+            "Visma.School.Business.Services.Tests",
+            "DataAccess.Repositories.DataSeeder.Tests",
+            "DataAccess.Repositories.Readonly.Tests"
+        ]
+	},
+	{
+		"Name": "Visma.School.SelfService",
+		"Assemblies": ["Visma.School.SelfService.Api",
+		"Visma.School.SelfService.Api.Tests"]
+	},
+	{
+		"Name": "Visma.School.Integrations",
+		"Assemblies": ["Visma.School.Integrations.Api",
+		"Integrations.Api.Tests",
+		"IntegrationApi.TestClient"]
+	}]
+}

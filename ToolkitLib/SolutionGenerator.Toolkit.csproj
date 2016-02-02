@@ -1,0 +1,95 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.30703</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{83ABE776-D30C-4EFC-92B2-B20349878F21}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>SolutionGenerator.Toolkit</RootNamespace>
+    <AssemblyName>SolutionGenerator.Toolkit</AssemblyName>
+    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>..\Binaries\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>..\Binaries\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="Microsoft.Build" />
+    <Reference Include="Microsoft.Build.Engine" />
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="BaseComponent.cs" />
+    <Compile Include="Core\DomainObject.cs" />
+    <Compile Include="Extensions.cs" />
+    <Compile Include="FileSystem\Data\FileInfoGroup.cs" />
+    <Compile Include="FileSystem\Data\FileRepository.cs" />
+    <Compile Include="FileSystem\FileSearcher.cs" />
+    <Compile Include="FileSystem\PathHelper.cs" />
+    <Compile Include="LoggerBase.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SolutionGenerator.cs" />
+    <Compile Include="SolutionGeneratorException.cs" />
+    <Compile Include="Solutions\Data\GeneratedSolution.cs" />
+    <Compile Include="Solutions\Data\VSIncludedFile.cs" />
+    <Compile Include="Solutions\Data\VSProject.cs" />
+    <Compile Include="Solutions\Data\VSProjectOutputType.cs" />
+    <Compile Include="Solutions\Data\VSProjectReference.cs" />
+    <Compile Include="Solutions\Project\IProjectReader.cs" />
+    <Compile Include="Solutions\Project\ManualProjectReader.cs" />
+    <Compile Include="Solutions\ProjectLoader.cs" />
+    <Compile Include="Solutions\Project\MsBuildProjectReader.cs" />
+    <Compile Include="Solutions\Project\ProjectReaderFactory.cs" />
+    <Compile Include="Solutions\Project\ProjectReaderType.cs" />
+    <Compile Include="Solutions\ReferenceWalker.cs" />
+    <Compile Include="Solutions\SolutionCreator.cs" />
+    <Compile Include="Storage\Data\ProjectConfiguration.cs" />
+    <Compile Include="Storage\Data\ProjectGroup.cs" />
+    <Compile Include="Storage\Data\ProjectInfo.cs" />
+    <Compile Include="Storage\Data\ProjectSetup.cs" />
+    <Compile Include="Storage\Data\ProjectSetupBehavior.cs" />
+    <Compile Include="Storage\Data\ThirdPartyFile.cs" />
+    <Compile Include="Storage\Data\ThirdPartyFileContainer.cs" />
+    <Compile Include="Storage\ProjectConfigurationReader.cs" />
+    <Compile Include="Tests\ProjectConfigurationTests.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="Tests\sampleconfiguration.xml">
+      <SubType>Designer</SubType>
+    </Content>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
