@@ -305,8 +305,6 @@ namespace SolutionGenerator.Toolkit
 				timer.Stop();
 				Logger.Info("Solution generated in {0}", timer.Elapsed);
 			}
-
-			//return unusedProjects;
 		}
 
 		private void CollectDependentAssemblies(string thirdPartyFolder, string assemblyLocation, HashSet<string> completeThirdPartyList, HashSet<string> checkedAssemblies)
@@ -339,5 +337,117 @@ namespace SolutionGenerator.Toolkit
 				Logger.Error(e.Message);
 			}
 		}
-	}
+
+        public int CopyThirdParties(ProjectSetup projectSetup, string thirdPartyOutput, string sourceRootFolder, string thirdPartiesFolder, string[] targetProjects)
+        {
+            Logger.Info("Root folder: {0}", sourceRootFolder);
+            Logger.Info("Thirdparties folder: {0}", thirdPartiesFolder);
+            Logger.Info("Output folder: {0}", thirdPartyOutput);
+            Logger.Info("Projects: {0}", string.Join(";", targetProjects));
+
+            List<string> projectFiles = FileSearcher.Scan("*.csproj", new[] { sourceRootFolder });
+            ProjectLoader projectLoader = ProjectLoader.Create(Logger, sourceRootFolder);
+
+            int loadedCount = 0;
+            Stopwatch loadTimer = Stopwatch.StartNew();
+            try
+            {
+                Logger.Info("");
+                Logger.Info("Preloading project files...");
+                loadedCount = projectLoader.PreloadProjects(projectSetup, projectFiles);
+            }
+            finally
+            {
+                loadTimer.Stop();
+                Logger.Info("Source load completed in {0}. Loaded project files = {1}{2}", loadTimer.Elapsed, loadedCount, Environment.NewLine);
+            }
+
+            var targetProjectFiles = new List<string>();
+            foreach (var assemblyName in targetProjects)
+            {
+                var projectFile = projectLoader.GetProjectByAssemblyName(assemblyName);
+                if (projectFile == null)
+                    throw new Exception($"Project by assembly name {assemblyName} not found");
+                targetProjectFiles.Add(projectFile.ProjectFileLocation);
+            }
+
+            var thirdPartyFolders = string.IsNullOrWhiteSpace(thirdPartiesFolder) ? new string[] { } : new[] { thirdPartiesFolder };
+
+            ReferenceWalker walker = new ReferenceWalker(Logger);
+            var dependencies = walker.WalkReferencesRecursively(projectSetup, projectLoader, targetProjectFiles, thirdPartyFolders, new HashSet<string>());
+            var projectList = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            projectList.UnionWith(targetProjectFiles);
+            foreach (var dependency in dependencies)
+            {
+                var p = projectLoader.GetProjectById(dependency);
+                if (p != null)
+                {
+                    projectList.Add(p.ProjectFileLocation);
+                }
+            }
+
+            Stopwatch timer = Stopwatch.StartNew();
+            try
+            {
+                if (!Directory.Exists(thirdPartyOutput))
+                    Directory.CreateDirectory(thirdPartyOutput);
+
+                HashSet<string> usedThirdParties = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+                GeneratedSolution solution = SolutionCreator.CreateSolution(
+                    projectSetup, projectLoader, projectList, "GeneratedSolution", thirdPartyFolders, usedThirdParties, null);
+
+                HashSet<string> completeThirdPartyList = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+                foreach (string assemblyLocation in usedThirdParties)
+                {
+                    string folder = Path.GetDirectoryName(assemblyLocation) ?? ".";
+                    CollectDependentAssemblies(folder, assemblyLocation, completeThirdPartyList, null);
+                }
+
+                List<string> usedThirdPartyList = new List<string>(completeThirdPartyList);
+                usedThirdPartyList.Sort();
+                if (usedThirdPartyList.Count > 0)
+                {
+                    ThirdPartyFileContainer container = new ThirdPartyFileContainer { Items = new ThirdPartyFile[usedThirdPartyList.Count] };
+
+                    var coppied = 0;
+                    for (int i = 0; i < usedThirdPartyList.Count; ++i)
+                    {
+                        var assemblyLocation = usedThirdPartyList[i];
+                        container.Items[i] = new ThirdPartyFile(sourceRootFolder, assemblyLocation);
+
+                        var fileName = Path.GetFileName(assemblyLocation) ?? "";
+                        var targetFileLocation = Path.Combine(thirdPartyOutput, fileName);
+
+                        FileInfo sourceFileInfo = new FileInfo(assemblyLocation);
+                        FileInfo targetFileInfo = new FileInfo(targetFileLocation);
+
+                        if (!targetFileInfo.Exists || targetFileInfo.Length != sourceFileInfo.Length || targetFileInfo.LastWriteTimeUtc != sourceFileInfo.LastWriteTimeUtc)
+                        {
+                            try
+                            {
+                                sourceFileInfo.CopyTo(targetFileLocation, true);
+                                ++coppied;
+                                Logger.Info("Copied to target: {0}", targetFileLocation);
+                            }
+                            catch (Exception e)
+                            {
+                                Logger.Info("Unable to copy to target: {0}. Error: {1}", targetFileLocation, e.Message);
+                            }
+                        }
+                    }
+
+                    Logger.Info("Coppied {0} files.", coppied);
+                }
+
+                return solution.IncludedProjects;
+            }
+            finally
+            {
+                timer.Stop();
+                Logger.Info("Third parties copied in {0}", timer.Elapsed);
+            }
+        }
+
+    }
 }

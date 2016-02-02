@@ -8,7 +8,7 @@
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SolutionToolkit</RootNamespace>
-    <AssemblyName>SolutionToolkit</AssemblyName>
+    <AssemblyName>SolutionGenerator.Console</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
@@ -51,6 +51,7 @@
     <Compile Include="Implementation\IImplementation.cs" />
     <Compile Include="Implementation\ProjectFileModificationImplementation.cs" />
     <Compile Include="Implementation\SolutionGenerationImplementation.cs" />
+    <Compile Include="Implementation\ThirdPartyCopyImplementation.cs" />
     <Compile Include="VisualStudio\ItemGroup.cs" />
     <Compile Include="ProjectConfiguration.cs" />
     <Compile Include="VisualStudio\Reference.cs" />

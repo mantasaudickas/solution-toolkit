@@ -80,9 +80,9 @@
     <Compile Include="Tests\ProjectConfigurationTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Tests\sampleconfiguration.xml">
+    <None Include="Tests\sampleconfiguration.xml">
       <SubType>Designer</SubType>
-    </Content>
+    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

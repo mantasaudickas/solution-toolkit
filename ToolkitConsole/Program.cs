@@ -27,19 +27,23 @@ namespace SolutionToolkit
                 }
 
                 int index = arguments.IndexOf("-c");
-                if (index < 0 || arguments.Count <= index + 1)
+                if ((index < 0 || arguments.Count <= index + 1) && (arguments.IndexOf("-s") >= 0 || arguments.IndexOf("-f") >= 0))
                 {
                     ShowHelp("Configuration file is not specified");
                     Environment.ExitCode = -1;
                     return;
                 }
 
-                var configurationFile = arguments[index + 1];
-                if (!File.Exists(configurationFile))
+                string configurationFile = null;
+                if (index >= 0)
                 {
-                    ShowHelp("Configuration file does not exists");
-                    Environment.ExitCode = -1;
-                    return;
+                    configurationFile = arguments[index + 1];
+                    if (!File.Exists(configurationFile))
+                    {
+                        ShowHelp("Configuration file does not exists");
+                        Environment.ExitCode = -1;
+                        return;
+                    }
                 }
 
                 string selectedProject = string.Empty;
@@ -55,7 +59,47 @@ namespace SolutionToolkit
                     selectedProject = arguments[index + 1];
                 }
 
-                var configuration = JsonConvert.DeserializeObject<ProjectConfiguration>(File.ReadAllText(configurationFile));
+                string thirdPartyOutputPath = string.Empty;
+                index = arguments.IndexOf("-3");
+                if (index >= 0 && arguments.Count <= index + 1)
+                {
+                    ShowHelp("Third parties output path is not specified");
+                    Environment.ExitCode = -1;
+                    return;
+                }
+                else if (index >= 0)
+                {
+                    thirdPartyOutputPath = arguments[index + 1];
+                }
+
+                string rootPath = ".";
+                string thirdPartiesRootPath = ".";
+                index = arguments.IndexOf("-r");
+                if (index >= 0 && arguments.Count <= index + 2)
+                {
+                    ShowHelp("Root path is not specified");
+                    Environment.ExitCode = -1;
+                    return;
+                }
+                else if (index >= 0)
+                {
+                    rootPath = Path.GetFullPath(arguments[index + 1]);
+                    thirdPartiesRootPath = Path.GetFullPath(arguments[index + 2]);
+                }
+
+                ProjectConfiguration configuration;
+
+                if (!string.IsNullOrEmpty(configurationFile))
+                {
+                    configuration =
+                        JsonConvert.DeserializeObject<ProjectConfiguration>(File.ReadAllText(configurationFile));
+                }
+                else
+                {
+                    configuration = new ProjectConfiguration();
+                    configuration.RootPath = rootPath;
+                    configuration.ThirdPartiesRootPath = thirdPartiesRootPath;
+                }
 
                 var configurationDirectory = Path.GetDirectoryName(configurationFile) ?? ".";
                 if (!Path.IsPathRooted(configuration.RootPath))
@@ -102,6 +146,12 @@ namespace SolutionToolkit
                     }
 
                     implementation = new SolutionGenerationImplementation(solutionOutputPath);
+                    implementation.Execute(configuration, selectedProject);
+                }
+
+                if (arguments.Contains("-3"))
+                {
+                    implementation = new ThirdPartyCopyImplementation(thirdPartyOutputPath);
                     implementation.Execute(configuration, selectedProject);
                 }
             }

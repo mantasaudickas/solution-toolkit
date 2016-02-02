@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>SolutionGenerator.Console</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Mantas Audickas</authors>
+    <owners>Mantas Audickas</owners>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <projectUrl>https://gitlab.com/mantas.audickas/database-migrator</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Visual Studio solution generator</description>
+    <copyright>Copyright 2016</copyright>
+    <tags>Visual Studio Solution generator</tags>
+    <dependencies>
+      <dependency id="Newtonsoft.Json" version="8.0.2" />
+    </dependencies>    
+  </metadata>
+</package>
