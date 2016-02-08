@@ -53,7 +53,11 @@ namespace SolutionToolkit.Implementation
                     var referedAssemblyName = referedProjectFile.GetAssemblyName();
                     var referedOutputPath = referedProjectFile.GetOutputPath();
 
-                    var toPath = Path.GetFullPath(Path.Combine(Path.GetDirectoryName(referedProject), referedOutputPath));
+                    var referredDirectoryName = Path.GetDirectoryName(referedProject);
+                    if (referredDirectoryName == null)
+                        throw new Exception("Unable to resolve reffered directory name.");
+
+                    var toPath = Path.GetFullPath(Path.Combine(referredDirectoryName, referedOutputPath));
                     var outputDir = CalculateRelativePath(projectFile, singleProject.FullName, toPath);
 
                     var hintPath = $"{outputDir}{referedAssemblyName}.dll";

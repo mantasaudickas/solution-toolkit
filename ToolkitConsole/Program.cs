@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using Newtonsoft.Json;
+using System.Runtime.Serialization.Json;
 using SolutionToolkit.Implementation;
 
 namespace SolutionToolkit
@@ -91,8 +91,8 @@ namespace SolutionToolkit
 
                 if (!string.IsNullOrEmpty(configurationFile))
                 {
-                    configuration =
-                        JsonConvert.DeserializeObject<ProjectConfiguration>(File.ReadAllText(configurationFile));
+                    DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ProjectConfiguration));
+                    configuration = (ProjectConfiguration) serializer.ReadObject(File.OpenRead(configurationFile));
                 }
                 else
                 {
@@ -180,40 +180,47 @@ namespace SolutionToolkit
             {
                 new ProjectInfo
                 {
-                    Name = "Visma.School.Admin",
+                    Name = "Project.Admin",
                     Assemblies = new List<string>
                     {
-                        "Visma.School.UI.Web",
-                        "Visma.School.Services.Scheduler",
-                        "Visma.School.UI.Web.Tests",
-                        "Visma.School.Business.Services.IntegrationTests",
-                        "Visma.School.Business.Services.Tests",
+                        "Project.UI.Web",
+                        "Project.Services.Scheduler",
+                        "Project.UI.Web.Tests",
+                        "Project.Business.Services.IntegrationTests",
+                        "Project.Business.Services.Tests",
                         "DataAccess.Repositories.DataSeeder.Tests",
                         "DataAccess.Repositories.Readonly.Tests",
                     }
                 },
                 new ProjectInfo
                 {
-                    Name = "Visma.School.SelfService",
+                    Name = "Project.SelfService",
                     Assemblies = new List<string>
                     {
-                        "Visma.School.SelfService.Api",
-                        "Visma.School.SelfService.Api.Tests"
+                        "Project.SelfService.Api",
+                        "Project.SelfService.Api.Tests"
                     }
                 },
                 new ProjectInfo
                 {
-                    Name = "Visma.School.Integrations",
+                    Name = "Project.Integrations",
                     Assemblies = new List<string>
                     {
-                        "Visma.School.Integrations.Api",
+                        "Project.Integrations.Api",
                         "Integrations.Api.Tests",
                         "IntegrationApi.TestClient"
                     }
                 },
             };
-            var data = JsonConvert.SerializeObject(config);
-            Console.WriteLine(data);
+
+            DataContractJsonSerializer serializer = new DataContractJsonSerializer(typeof(ProjectConfiguration));
+            using (var stream = new MemoryStream())
+            {
+                serializer.WriteObject(stream, config);
+
+                var data = System.Text.Encoding.UTF8.GetString(stream.ToArray());
+                Console.WriteLine(data);
+            }
         }
 
         private static void ShowHelp(string errorMessage)
@@ -228,9 +235,9 @@ namespace SolutionToolkit
             Console.WriteLine("-o <path> - solution output path");
 
             // -f -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
-            // -s -p Visma.School.Admin -o ..\VismaSchool.SelfService.Gen.sln -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
-            // -s -p Visma.School.AdminWithIntegrations -o ..\VismaSchool.Gen.sln -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
-            // -s -p Visma.School.SelfService -o ..\VismaSchool.SelfService.Gen.sln -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
+            // -s -p Project.Admin -o ..\VismaSchool.SelfService.Gen.sln -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
+            // -s -p Project.AdminWithIntegrations -o ..\VismaSchool.Gen.sln -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
+            // -s -p Project.SelfService -o ..\VismaSchool.SelfService.Gen.sln -c "d:\Projects\VIGO\VismaSchool\master\Builds\solution configuration.json"
         }
     }
 }

@@ -317,6 +317,12 @@ namespace SolutionGenerator.Toolkit
 				}
 				checkedAssemblies.Add(assemblyLocation);
 
+			    var depLocation = assemblyLocation.Replace(".dll", ".dep");
+			    if (File.Exists(depLocation))
+			    {
+                    completeThirdPartyList.Add(depLocation);
+			    }
+                
 				Assembly assembly = Assembly.ReflectionOnlyLoadFrom(assemblyLocation);
 				completeThirdPartyList.Add(assemblyLocation);
 
@@ -324,7 +330,7 @@ namespace SolutionGenerator.Toolkit
 				foreach (AssemblyName referencedAssembly in referencedAssemblies)
 				{
 					string location = referencedAssembly.Name;
-					string referencedAssemblyLocation = Path.Combine(thirdPartyFolder, location) + ".dll";
+                    string referencedAssemblyLocation = Path.Combine(thirdPartyFolder, location) + ".dll";
 					if (File.Exists(referencedAssemblyLocation) && !checkedAssemblies.Contains(referencedAssemblyLocation))
 					{
 						completeThirdPartyList.Add(referencedAssemblyLocation);
@@ -373,7 +379,7 @@ namespace SolutionGenerator.Toolkit
 
             var thirdPartyFolders = string.IsNullOrWhiteSpace(thirdPartiesFolder) ? new string[] { } : new[] { thirdPartiesFolder };
 
-            ReferenceWalker walker = new ReferenceWalker(Logger);
+            var walker = new ReferenceWalker(Logger);
             var dependencies = walker.WalkReferencesRecursively(projectSetup, projectLoader, targetProjectFiles, thirdPartyFolders, new HashSet<string>());
             var projectList = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             projectList.UnionWith(targetProjectFiles);

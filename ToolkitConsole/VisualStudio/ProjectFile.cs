@@ -208,6 +208,12 @@ namespace SolutionToolkit.VisualStudio
 
                         if (exists)
                         {
+                            var parent = reference.ParentNode;
+                            if (parent != null)
+                            {
+                                parent.RemoveChild(reference);
+                            }
+                            exists = false;
                             break;
                         }
                     }
@@ -215,7 +221,7 @@ namespace SolutionToolkit.VisualStudio
 
                 if (!exists)
                 {
-                    AddReference("System.Runtime", null);
+                    AddReference("System.Runtime", @"c:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Facades\System.Runtime.dll");
                 }
             }
         }
