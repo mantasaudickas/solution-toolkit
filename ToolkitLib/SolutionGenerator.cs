@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using SolutionGenerator.Toolkit.FileSystem;
@@ -323,6 +324,11 @@ namespace SolutionGenerator.Toolkit
 
         private void CollectDependentAssemblies(string thirdPartyFolder, string assemblyLocation, HashSet<string> completeThirdPartyList, HashSet<string> checkedAssemblies)
         {
+            CollectDependentAssembliesInternal(thirdPartyFolder, assemblyLocation, completeThirdPartyList, checkedAssemblies);
+        }
+
+        private void CollectDependentAssembliesInternal(string thirdPartyFolder, string assemblyLocation, HashSet<string> completeThirdPartyList, HashSet<string> checkedAssemblies)
+        {
             try
             {
                 if (checkedAssemblies == null)
@@ -337,7 +343,12 @@ namespace SolutionGenerator.Toolkit
                     completeThirdPartyList.Add(depLocation);
                 }
 
-                Assembly assembly = Assembly.ReflectionOnlyLoadFrom(assemblyLocation);
+                var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+                Assembly assembly = assemblies.FirstOrDefault(a => a.FullName == Path.GetFileNameWithoutExtension(assemblyLocation));
+                if (assembly == null)
+                {
+                    assembly = Assembly.LoadFrom(assemblyLocation);
+                }
                 completeThirdPartyList.Add(assemblyLocation);
 
                 AssemblyName[] referencedAssemblies = assembly.GetReferencedAssemblies();
@@ -345,16 +356,17 @@ namespace SolutionGenerator.Toolkit
                 {
                     string location = referencedAssembly.Name;
                     string referencedAssemblyLocation = Path.Combine(thirdPartyFolder, location) + ".dll";
-                    if (File.Exists(referencedAssemblyLocation) && !checkedAssemblies.Contains(referencedAssemblyLocation))
+                    if (File.Exists(referencedAssemblyLocation) &&
+                        !checkedAssemblies.Contains(referencedAssemblyLocation))
                     {
                         completeThirdPartyList.Add(referencedAssemblyLocation);
-                        CollectDependentAssemblies(thirdPartyFolder, referencedAssemblyLocation, completeThirdPartyList, checkedAssemblies);
+                        CollectDependentAssembliesInternal(thirdPartyFolder, referencedAssemblyLocation, completeThirdPartyList, checkedAssemblies);
                     }
                 }
             }
             catch (Exception e)
             {
-                Logger.Error(e.Message);
+                Logger.Warn(e.Message);
             }
         }
 
