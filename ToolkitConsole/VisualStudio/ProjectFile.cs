@@ -15,6 +15,7 @@ namespace SolutionToolkit.VisualStudio
         private IList<ProjectReference> _projectReferences;
         private IList<Reference> _references;
         private IList<PropertyGroup> _properties;
+        private bool? isExecutable;
 
         public ProjectFile(string pathToFile)
         {
@@ -67,6 +68,27 @@ namespace SolutionToolkit.VisualStudio
             }
         }
 
+        public bool IsExecutable
+        {
+            get
+            {
+                if (!isExecutable.HasValue)
+                {
+                    isExecutable = ResolveIsExecutable();
+                }
+                return isExecutable.Value;
+            }
+        }
+
+        private bool ResolveIsExecutable()
+        {
+            XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
+            var node = _document.SelectSingleNode(GetXPath(@"OutputType"), namespaceManager);
+            if (node == null)
+                return false;
+            return string.Equals(node.InnerText, "WinExe", StringComparison.InvariantCultureIgnoreCase) || string.Equals(node.InnerText, "Exe", StringComparison.InvariantCultureIgnoreCase);
+        }
+
         public HashSet<Guid> DependentProjects { get; private set; }
 
         public void AddReference(string include, string hintPath)
@@ -112,8 +134,9 @@ namespace SolutionToolkit.VisualStudio
             parentNode.AppendChild(referenceElement);
         }
 
-        public void SetReferencePrivacy(bool isPrivate, string [] path)
+        public bool SetReferencePrivacy(bool isPrivate, string [] path)
         {
+            var changed = false;
             XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
             XmlNodeList referenceNodes = _document.SelectNodes(GetXPath(@"Reference"), namespaceManager);
             if (referenceNodes != null)
@@ -135,13 +158,65 @@ namespace SolutionToolkit.VisualStudio
                     {
                         privateNode = _document.CreateElement("Private", DefaultNamespace);
                         node.AppendChild(privateNode);
+                        changed = true;
                     }
-                    privateNode.InnerText = isPrivate ? "True" : "False";
+                    var nextValue = isPrivate ? "True" : "False";
+                    if (privateNode.InnerText != nextValue)
+                    {
+                        privateNode.InnerText = nextValue;
+                        changed = true;
+                    }
                 }
             }
+            return changed;
         }
 
-        public void SetOutputPath(string outputPath)
+        public bool SetReferenceSpecificVersion(ReferenceChangeMode specificVersionMode)
+        {
+            if (specificVersionMode == ReferenceChangeMode.None)
+                return false;
+
+            var changed = false;
+            XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
+            XmlNodeList referenceNodes = _document.SelectNodes(GetXPath(@"Reference"), namespaceManager);
+            if (referenceNodes != null)
+            {
+                foreach (XmlNode node in referenceNodes)
+                {
+                    var specificVersionNode = SelectChildNode(node, "SpecificVersion");
+
+                    if (specificVersionMode == ReferenceChangeMode.Remove)
+                    {
+                        if (specificVersionNode != null)
+                        {
+                            var parent = specificVersionNode.ParentNode;
+                            if (parent != null)
+                            {
+                                parent.RemoveChild(specificVersionNode);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        if (specificVersionNode == null)
+                        {
+                            specificVersionNode = _document.CreateElement("SpecificVersion", DefaultNamespace);
+                            node.AppendChild(specificVersionNode);
+                            changed = true;
+                        }
+
+                        if (specificVersionNode.InnerText != "True")
+                        {
+                            specificVersionNode.InnerText = "True";
+                            changed = true;
+                        }
+                    }
+                }
+            }
+            return changed;
+        }
+
+        public bool SetOutputPath(string outputPath)
         {
             XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
             XmlNodeList nodes = _document.SelectNodes(GetXPath(@"OutputPath"), namespaceManager);
@@ -149,14 +224,21 @@ namespace SolutionToolkit.VisualStudio
             if (nodes == null)
                 throw new Exception("Output path not found!");
 
+            var changed = false;
             foreach (XmlNode node in nodes)
             {
-                node.InnerText = outputPath;
+                if (!string.Equals(node.InnerText, outputPath, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    node.InnerText = outputPath;
+                    changed = true;
+                }
             }
+            return changed;
         }
 
-        public void SetTargetFrameworkVersion(string version)
+        public bool SetTargetFrameworkVersion(string version)
         {
+            var changed = false;
             XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
             XmlNodeList nodes = _document.SelectNodes(GetXPath(@"TargetFrameworkVersion"), namespaceManager);
 
@@ -165,12 +247,19 @@ namespace SolutionToolkit.VisualStudio
 
             foreach (XmlNode node in nodes)
             {
-                node.InnerText = version;
+                if (node.InnerText != version)
+                {
+                    changed = true;
+                    node.InnerText = version;
+                }
             }
+
+            return changed;
         }
 
-        public void RemoveProjectReferences()
+        public bool RemoveProjectReferences()
         {
+            var changed = false;
             XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
             XmlNodeList projectReferences = _document.SelectNodes(GetXPath(@"ProjectReference"), namespaceManager);
             if (projectReferences != null && projectReferences.Count > 0)
@@ -180,19 +269,55 @@ namespace SolutionToolkit.VisualStudio
                     var parent = projectReference.ParentNode;
                     if (parent != null)
                     {
+                        changed = true;
                         parent.RemoveChild(projectReference);
                     }
                 }
             }
+            return changed;
         }
 
-        public void AddSystemRuntimeReference()
+        public bool RemoveSystemRuntimeReference()
         {
+            var changed = false;
             XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
             XmlNodeList references = _document.SelectNodes(GetXPath(@"Reference"), namespaceManager);
             if (references != null && references.Count > 0)
             {
-                bool exists = false;
+                foreach (XmlNode reference in references)
+                {
+                    var isSystemRuntimeReference = false;
+                    if (reference.Attributes != null)
+                    {
+                        foreach (XmlAttribute attribute in reference.Attributes)
+                        {
+                            if (attribute.Name == "Include" && (attribute.Value.StartsWith("System.Runtime,") || attribute.Value.Equals("System.Runtime")))
+                            {
+                                isSystemRuntimeReference = true;
+                            }
+                        }
+                    }
+
+                    if (isSystemRuntimeReference)
+                    {
+                        var parent = reference.ParentNode;
+                        parent?.RemoveChild(reference);
+                        changed = true;
+                    }
+                }
+            }
+            return changed;
+        }
+
+        public bool AddSystemRuntimeReference()
+        {
+            var changed = false;
+            XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
+            XmlNodeList references = _document.SelectNodes(GetXPath(@"Reference"), namespaceManager);
+            if (references != null && references.Count > 0)
+            {
+                var exists = false;
+                var isValid = false;
                 foreach (XmlNode reference in references)
                 {
                     if (reference.Attributes != null)
@@ -202,11 +327,12 @@ namespace SolutionToolkit.VisualStudio
                             if (attribute.Name == "Include" && (attribute.Value.StartsWith("System.Runtime,") || attribute.Value.Equals("System.Runtime")))
                             {
                                 exists = true;
+                                isValid = SelectChildNode(reference, "HintPath") != null;
                                 break;
                             }
                         }
 
-                        if (exists)
+                        if (exists && !isValid)
                         {
                             var parent = reference.ParentNode;
                             if (parent != null)
@@ -222,12 +348,15 @@ namespace SolutionToolkit.VisualStudio
                 if (!exists)
                 {
                     AddReference("System.Runtime", @"c:\Program Files (x86)\Reference Assemblies\Microsoft\Framework\.NETFramework\v4.6.1\Facades\System.Runtime.dll");
+                    changed = true;
                 }
             }
+            return changed;
         }
 
-        public void RemoveNuget()
+        public bool RemoveNuget()
         {
+            var changed = false;
             XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
             XmlNodeList nodeList = _document.SelectNodes(GetXPath(@"RestorePackages"), namespaceManager);
             if (nodeList != null && nodeList.Count > 0)
@@ -237,6 +366,7 @@ namespace SolutionToolkit.VisualStudio
                     var parent = projectReference.ParentNode;
                     if (parent != null)
                     {
+                        changed = true;
                         parent.RemoveChild(projectReference);
                     }
                 }
@@ -255,6 +385,7 @@ namespace SolutionToolkit.VisualStudio
                         var parent = node.ParentNode;
                         if (parent != null)
                         {
+                            changed = true;
                             parent.RemoveChild(node);
                         }
                     }
@@ -274,11 +405,13 @@ namespace SolutionToolkit.VisualStudio
                         var parent = node.ParentNode;
                         if (parent != null)
                         {
+                            changed = true;
                             parent.RemoveChild(node);
                         }
                     }
                 }
             }
+            return changed;
         }
 
         public void Save()

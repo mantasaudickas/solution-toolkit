@@ -1,4 +1,5 @@
 ﻿using System;
+using SolutionGenerator.Toolkit.Logging;
 
 namespace SolutionGenerator.Toolkit
 {

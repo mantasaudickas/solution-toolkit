@@ -3,7 +3,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
-
+using SolutionGenerator.Toolkit.Logging;
 using SolutionGenerator.Toolkit.Solutions.Data;
 using SolutionGenerator.Toolkit.Solutions.Project;
 using SolutionGenerator.Toolkit.Storage.Data;

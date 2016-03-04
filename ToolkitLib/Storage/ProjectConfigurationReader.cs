@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using SolutionGenerator.Toolkit.FileSystem;
+using SolutionGenerator.Toolkit.Logging;
 using SolutionGenerator.Toolkit.Storage.Data;
 
 namespace SolutionGenerator.Toolkit.Storage

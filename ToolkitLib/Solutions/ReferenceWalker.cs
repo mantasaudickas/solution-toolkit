@@ -5,6 +5,7 @@ using System.IO;
 using System.Text;
 using SolutionGenerator.Toolkit.Storage.Data;
 using SolutionGenerator.Toolkit.FileSystem;
+using SolutionGenerator.Toolkit.Logging;
 using SolutionGenerator.Toolkit.Solutions.Data;
 
 namespace SolutionGenerator.Toolkit.Solutions

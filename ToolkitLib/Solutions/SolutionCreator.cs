@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
+using SolutionGenerator.Toolkit.Logging;
 using SolutionGenerator.Toolkit.Solutions.Data;
 using SolutionGenerator.Toolkit.Storage.Data;
 

@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Runtime.Serialization.Json;
+using SolutionGenerator.Toolkit.Logging;
 using SolutionToolkit.Implementation;
 
 namespace SolutionToolkit
@@ -26,13 +27,29 @@ namespace SolutionToolkit
                     return;
                 }
 
-                int index = arguments.IndexOf("-c");
-                if ((index < 0 || arguments.Count <= index + 1) && (arguments.IndexOf("-s") >= 0 || arguments.IndexOf("-f") >= 0))
+                int index = arguments.IndexOf("-v");
+                if (index >= 0)
+                {
+                    if (arguments.Count <= index + 1)
+                    {
+                        ShowHelp("Configuration file is not specified");
+                        Environment.ExitCode = -1;
+                        return;
+                    }
+
+                    int verbosityLevel = int.Parse(arguments[index + 1]);
+                    ConsoleLogger.VerbosityLevel = verbosityLevel;
+                }
+
+                index = arguments.IndexOf("-c");
+                if ((index < 0 || arguments.Count <= index + 1) && (arguments.IndexOf("-s") >= 0))
                 {
                     ShowHelp("Configuration file is not specified");
                     Environment.ExitCode = -1;
                     return;
                 }
+
+                var checkOnlyDependencies = false;
 
                 string configurationFile = null;
                 if (index >= 0)
@@ -96,9 +113,15 @@ namespace SolutionToolkit
                 }
                 else
                 {
-                    configuration = new ProjectConfiguration();
-                    configuration.RootPath = rootPath;
-                    configuration.ThirdPartiesRootPath = thirdPartiesRootPath;
+                    configuration = new ProjectConfiguration
+                    {
+                        RootPath = rootPath,
+                        ThirdPartiesRootPath = thirdPartiesRootPath,
+                        BinariesOutputPath = "Binaries",
+                        Projects = new[] {new ProjectInfo {Name = selectedProject, Assemblies = new List<string> {selectedProject}}}
+                    };
+
+                    checkOnlyDependencies = true;
                 }
 
                 var configurationDirectory = Path.GetDirectoryName(configurationFile) ?? ".";
@@ -117,7 +140,7 @@ namespace SolutionToolkit
                 IImplementation implementation;
                 if (arguments.Contains("-f"))
                 {
-                    implementation = new ProjectFileModificationImplementation();
+                    implementation = new ProjectFileModificationImplementation(checkOnlyDependencies);
                     implementation.Execute(configuration, selectedProject);
                 }
 
@@ -157,7 +180,7 @@ namespace SolutionToolkit
             }
             catch (Exception exc)
             {
-                Console.WriteLine(exc);
+                ConsoleLogger.Default.Fatal(exc.ToString());
             }
             finally
             {
@@ -227,6 +250,7 @@ namespace SolutionToolkit
         {
             Console.WriteLine(errorMessage);
 
+            Console.WriteLine("-v - verbosity level [0-6]");
             Console.WriteLine("-s - generate solution");
             Console.WriteLine("-f - fix project files");
             Console.WriteLine("-e - show example project file");

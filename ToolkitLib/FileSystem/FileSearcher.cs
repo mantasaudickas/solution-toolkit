@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
+using SolutionGenerator.Toolkit.Logging;
 
 namespace SolutionGenerator.Toolkit.FileSystem
 {
@@ -92,8 +93,7 @@ namespace SolutionGenerator.Toolkit.FileSystem
 			finally
 			{
 				searchTimer.Stop();
-				Logger.Info("Source scan completed in {0}. Found {1} files.{2}",
-					 searchTimer.Elapsed, foundFiles.Count, Environment.NewLine);
+				Logger.Info("Source scan completed in {0}. Found {1} files.{2}", searchTimer.Elapsed, foundFiles.Count, Environment.NewLine);
 			}
 
 			return foundFiles;

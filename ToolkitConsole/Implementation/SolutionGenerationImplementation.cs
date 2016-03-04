@@ -1,4 +1,4 @@
-﻿using System.Linq;
+﻿using SolutionGenerator.Toolkit.Logging;
 using SolutionGenerator.Toolkit.Storage.Data;
 
 namespace SolutionToolkit.Implementation
@@ -33,7 +33,7 @@ namespace SolutionToolkit.Implementation
             };
 
             SolutionGenerator.Toolkit.SolutionGenerator generator =
-                new SolutionGenerator.Toolkit.SolutionGenerator(new ConsoleLogger());
+                new SolutionGenerator.Toolkit.SolutionGenerator(ConsoleLogger.Default);
 
             return generator.CreateSolution(projectSetup, _solutionOutputPath, projectPath, thirdParties, targetProjects);
         }
