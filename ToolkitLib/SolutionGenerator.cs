@@ -441,13 +441,13 @@ namespace SolutionGenerator.Toolkit
 
                 projectDependenciesToCopy.UnionWith(completeThirdPartyList);
 
-                if (completeThirdPartyList.Count > 0)
+                if (projectDependenciesToCopy.Count > 0)
                 {
-                    ThirdPartyFileContainer container = new ThirdPartyFileContainer { Items = new ThirdPartyFile[completeThirdPartyList.Count] };
+                    ThirdPartyFileContainer container = new ThirdPartyFileContainer { Items = new ThirdPartyFile[projectDependenciesToCopy.Count] };
 
                     var coppied = 0;
                     var index = 0;
-                    foreach (var assemblyLocation in completeThirdPartyList)
+                    foreach (var assemblyLocation in projectDependenciesToCopy)
                     {
                         container.Items[index++] = new ThirdPartyFile(sourceRootFolder, assemblyLocation);
 
