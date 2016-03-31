@@ -33,9 +33,23 @@ namespace SolutionGenerator.Toolkit.Solutions
                 solutionFile.AppendLine(customAppend);
             }
 
-            foreach (Guid projectId in solutionProjectList)
+            var testProjects = new List<Guid>();
+            var startProjects = new List<Guid>();
+            var otherProjects = new List<Guid>();
+
+            foreach (var projectId in solutionProjectList)
             {
                 var project = projectLoader.GetProjectById(projectId);
+
+                var isTestProject = project.AssemblyName.ToLowerInvariant().Contains("test");
+                var isStartProject = project.IsLauncher;
+
+                if (isTestProject)
+                    testProjects.Add(projectId);
+                else if (isStartProject)
+                    startProjects.Add(projectId);
+                else
+                    otherProjects.Add(projectId);
 
                 // FullProjectPath can be changed to relative, but then root folder is needed
                 var projectFileLocation = MakeRelativePath(solutionFileLocation, project.ProjectFileLocation);
@@ -76,6 +90,21 @@ namespace SolutionGenerator.Toolkit.Solutions
 
                 #endregion
 
+                solutionFile.AppendLine("EndProject");
+            }
+
+            var otherProjectId = Guid.NewGuid();
+            var testProjectId = Guid.NewGuid();
+
+            if (startProjects.Count > 0)
+            {
+                solutionFile.AppendLine($"Project(\"{{2150E333-8FDC-42A3-9474-1A3956D46DE8}}\") = \"Projects\", \"Projects\", \"{otherProjectId.ToString("B").ToUpperInvariant()}\"");
+                solutionFile.AppendLine("EndProject");
+            }
+
+            if (testProjects.Count > 0)
+            {
+                solutionFile.AppendLine($"Project(\"{{2150E333-8FDC-42A3-9474-1A3956D46DE8}}\") = \"Tests\", \"Tests\", \"{testProjectId.ToString("B").ToUpperInvariant()}\"");
                 solutionFile.AppendLine("EndProject");
             }
 
@@ -121,6 +150,29 @@ namespace SolutionGenerator.Toolkit.Solutions
                 solutionFile.AppendFormat("\t\t{0}.Release|x86.Build.0 = Release|Any CPU", idString).AppendLine();
             }
             solutionFile.AppendLine("\tEndGlobalSection");
+
+            solutionFile.AppendLine("\tGlobalSection(SolutionProperties) = preSolution");
+            solutionFile.AppendFormat("\t\tHideSolutionNode = FALSE").AppendLine();
+            solutionFile.AppendLine("\tEndGlobalSection");
+
+            if (testProjects.Count > 0 || startProjects.Count > 0)  // put to folder only we have one of these..
+            {
+                solutionFile.AppendLine("\tGlobalSection(NestedProjects) = preSolution");
+
+                foreach (var projectId in otherProjects)
+                {
+                    solutionFile.AppendFormat("\t\t{0} = {1}", projectId.ToString("B").ToUpperInvariant(), otherProjectId.ToString("B").ToUpperInvariant());
+                    solutionFile.AppendLine();
+                }
+
+                foreach (var projectId in testProjects)
+                {
+                    solutionFile.AppendFormat("\t\t{0} = {1}", projectId.ToString("B").ToUpperInvariant(), testProjectId.ToString("B").ToUpperInvariant());
+                    solutionFile.AppendLine();
+                }
+
+                solutionFile.AppendLine("\tEndGlobalSection");
+            }
 
             #endregion
 
