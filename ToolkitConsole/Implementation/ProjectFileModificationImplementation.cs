@@ -46,7 +46,8 @@ namespace SolutionToolkit.Implementation
                 var targetProjectFiles = generator.GetTargetProjectFiles(projectLoader, targetProjects);
 
                 ReferenceWalker walker = new ReferenceWalker(consoleLogger);
-                var dependencies = walker.WalkReferencesRecursively(projectSetup, projectLoader, targetProjectFiles,
+                var dependencies = walker.WalkReferencesRecursively(
+                    projectSetup, projectLoader, targetProjectFiles,
                     new[] {configuration.ThirdPartiesRootPath}, new HashSet<string>());
 
                 projectFiles = new List<FileSystemInfo>();
@@ -66,6 +67,8 @@ namespace SolutionToolkit.Implementation
                 configuration.GetSystemRuntimeReferenceMode,
                 configuration.GetSpecificVersionReferenceMode,
                 targetProjects);
+
+            ChangeProjectSettings(projectFiles);
         }
 
         private static void ChangeReferences(IEnumerable<FileSystemInfo> projectFiles, string projectRootPath, string binariesPath, string targetFrameworkVersion, ReferenceChangeMode sysRuntimeMode, ReferenceChangeMode specificVersionMode, string[] targetProjects)
@@ -157,12 +160,23 @@ namespace SolutionToolkit.Implementation
                     outputPath += "\\";
                 }
 
-                var changed = false;
                 var isTargetProject = IsTargetProject(assemblyName, targetProjects, projectFile);
-                if (!isTargetProject)
+                var changed = projectFile.SetOutputPath(!isTargetProject ? outputPath : "bin\\");
+
+                if (changed)
                 {
-                    changed = projectFile.SetOutputPath(outputPath);
+                    projectFile.Save();
                 }
+            }
+        }
+
+        private static void ChangeProjectSettings(IEnumerable<FileSystemInfo> projectFiles)
+        {
+            foreach (var singleProject in projectFiles)
+            {
+                var projectFile = new ProjectFile(singleProject.FullName);
+
+                bool changed = projectFile.ChangePlatform("AnyCPU");
 
                 if (changed)
                 {

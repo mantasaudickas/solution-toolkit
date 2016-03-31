@@ -183,18 +183,21 @@ namespace SolutionToolkit.VisualStudio
             {
                 foreach (XmlNode node in referenceNodes)
                 {
+                    var hasVersionSpecified = false;
+                    var include = node.Attributes?["Include"];
+                    if (include != null)
+                    {
+                        var assemblyName = include.InnerText;
+                        hasVersionSpecified = assemblyName.Contains(",");
+                    }
+
                     var specificVersionNode = SelectChildNode(node, "SpecificVersion");
 
-                    if (specificVersionMode == ReferenceChangeMode.Remove)
+                    if (specificVersionMode == ReferenceChangeMode.Remove && !hasVersionSpecified)
                     {
-                        if (specificVersionNode != null)
-                        {
-                            var parent = specificVersionNode.ParentNode;
-                            if (parent != null)
-                            {
-                                parent.RemoveChild(specificVersionNode);
-                            }
-                        }
+                        var parent = specificVersionNode?.ParentNode;
+                        parent?.RemoveChild(specificVersionNode);
+                        changed = true;
                     }
                     else
                     {
@@ -205,9 +208,10 @@ namespace SolutionToolkit.VisualStudio
                             changed = true;
                         }
 
-                        if (specificVersionNode.InnerText != "True")
+                        var newValue = specificVersionMode == ReferenceChangeMode.Add ? "True" : "False";
+                        if (specificVersionNode.InnerText != newValue)
                         {
-                            specificVersionNode.InnerText = "True";
+                            specificVersionNode.InnerText = newValue;
                             changed = true;
                         }
                     }
@@ -243,7 +247,7 @@ namespace SolutionToolkit.VisualStudio
             XmlNodeList nodes = _document.SelectNodes(GetXPath(@"TargetFrameworkVersion"), namespaceManager);
 
             if (nodes == null)
-                throw new Exception("Output path not found!");
+                throw new Exception("TargetFrameworkVersion not found!");
 
             foreach (XmlNode node in nodes)
             {
@@ -256,6 +260,28 @@ namespace SolutionToolkit.VisualStudio
 
             return changed;
         }
+
+        public bool ChangePlatform(string platform)
+        {
+            var changed = false;
+            XmlNamespaceManager namespaceManager = GetNamespaceManager(_document);
+            XmlNodeList nodes = _document.SelectNodes(GetXPath(@"Platform"), namespaceManager);
+
+            if (nodes == null)
+                throw new Exception("Platform not found!");
+
+            foreach (XmlNode node in nodes)
+            {
+                if (node.InnerText != platform)
+                {
+                    changed = true;
+                    node.InnerText = platform;
+                }
+            }
+
+            return changed;
+        }
+
 
         public bool RemoveProjectReferences()
         {

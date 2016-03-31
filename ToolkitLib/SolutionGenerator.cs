@@ -101,8 +101,8 @@ namespace SolutionGenerator.Toolkit
                         string assemblyLocation = usedThirdPartyList[i];
                         container.Items[i] = new ThirdPartyFile(sourceRootFolder, assemblyLocation);
                     }
-                    string thirdPartyFileContent = container.XmlSerialize(false, "http://schemas.microsoft.com/developer/msbuild/2003");
-                    File.WriteAllText(solutionToGenerate + ".thirdparties", thirdPartyFileContent, Encoding.UTF8);
+                    //string thirdPartyFileContent = container.XmlSerialize(false, "http://schemas.microsoft.com/developer/msbuild/2003");
+                    //File.WriteAllText(solutionToGenerate + ".thirdparties", thirdPartyFileContent, Encoding.UTF8);
                 }
 
                 return solution.IncludedProjects;
@@ -143,8 +143,7 @@ namespace SolutionGenerator.Toolkit
             finally
             {
                 loadTimer.Stop();
-                Logger.Info("Source load completed in {0}. Loaded project files = {1}{2}", loadTimer.Elapsed, loadedCount,
-                    Environment.NewLine);
+                Logger.Info("Source load completed in {0}. Loaded project files = {1}{2}", loadTimer.Elapsed, loadedCount, Environment.NewLine);
             }
             return projectLoader;
         }
